@@ -1,0 +1,7 @@
+{
+  "appId": "id.pengingat.laporan",
+  "appName": "Pengingat Laporan",
+  "webDir": "www",
+  "server": { "androidScheme": "https" },
+  "plugins": { "CapacitorHttp": { "enabled": true } }
+}
