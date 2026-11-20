@@ -16,17 +16,18 @@ label{display:block;font-size:12px;color:var(--m);margin:8px 0 3px}.g{display:gr
 dialog{border:1px solid var(--b);border-radius:12px;background:var(--c);color:var(--t);width:min(540px,95vw)}.hide{display:none!important}.m{color:var(--m);font-size:12px;margin-top:2px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin:10px 0}.tile{background:var(--bg);border-radius:8px;padding:8px;text-align:center}.tile b{display:block;font-size:20px}
 .warn{background:#fef3c7;color:#92400e;padding:8px 12px;border-radius:8px;margin-bottom:10px}
+#prn{display:none}@media print{body>*{display:none!important}body>#prn{display:block!important}body{background:#fff!important;padding:0!important;max-width:none!important}#prn tr{page-break-inside:avoid}#prn thead{display:table-header-group}}
 </style></head><body>
 
 <div id="lgn" class="card" style="max-width:380px;margin:8vh auto">
-<h1>📋 Pengingat Laporan</h1><p class="m">Masuk untuk melanjutkan</p>
+<h1>📋 Pengingat Laporan</h1><p class="m" id="lmsg">Masuk untuk melanjutkan</p>
 <div id="apiw"><label>URL Web App (…/exec) — diisi sekali</label><input id="apiurl" placeholder="https://script.google.com/macros/s/.../exec"></div>
 <label>Username</label><input id="lu" autocapitalize="none" autocomplete="username">
 <label>Password</label><input id="lp" type="password" autocomplete="current-password" onkeydown="if(event.key=='Enter')masuk()">
 <p><button class="pri" style="width:100%" onclick="masuk()">Masuk</button></p></div>
 
 <div id="ap" class="hide">
-<div class="row sp"><h1>📋 Pengingat Laporan</h1><div class="row"><span class="m" id="me"></span><button class="sm" onclick="profil()">Profil</button><button class="sm" onclick="keluar()">Keluar</button></div></div>
+<div class="row sp"><h1>📋 Pengingat Laporan</h1><div class="row"><span class="m" id="sy"></span><button class="sm" onclick="sync(1)">⟳ Sinkron</button><span class="m" id="me"></span><button class="sm" onclick="profil()">Profil</button><button class="sm" onclick="keluar()">Keluar</button></div></div>
 <div id="warn" class="warn hide">⚠️ Password Anda masih bawaan/direset admin. Segera ganti lewat menu <b>Profil</b>.</div>
 <div class="row" id="tabs" style="margin-bottom:10px"></div>
 
@@ -37,7 +38,7 @@ dialog{border:1px solid var(--b);border-radius:12px;background:var(--c);color:va
 <div class="g"><div><label>Deadline dari</label><input id="mdari" type="date"></div><div><label>Sampai</label><input id="msampai" type="date"></div>
 <div><label>Periode laporan</label><select id="mper"></select></div><div><label>Kategori</label><select id="mkat"></select></div>
 <div id="mw"><label>Pemilik</label><select id="muser"></select></div></div>
-<p><button class="pri" onclick="mon()">Tampilkan</button></p></div>
+<p class="row"><button class="pri" onclick="mon()">Tampilkan</button><button onclick="cetak()">🖨️ Cetak laporan</button></p></div>
 <div class="tiles" id="msum"></div><div class="card hide" id="mubox"><b>Per pemilik</b><div id="mu"></div></div><div class="card"><div id="ml" class="m">Klik Tampilkan.</div></div></div>
 
 <div id="p_usr" class="hide card"><p><button class="pri" onclick="editU()">+ Tambah Pengguna</button></p><div id="ul"></div></div>
@@ -46,10 +47,15 @@ dialog{border:1px solid var(--b);border-radius:12px;background:var(--c);color:va
 <div class="g"><div><label>Kirim pengingat pada H- (pisah koma)</label><input id="days"></div><div><label>Jam kirim otomatis (0-23, WITA)</label><input id="hour" type="number" min="0" max="23"></div></div>
 <p class="m">Laporan yang lewat deadline & belum selesai diingatkan tiap hari.</p><button class="pri" onclick="simpanCfg()">Simpan & aktifkan jadwal</button>
 <label>Tes kirim WhatsApp</label><div class="row"><input id="tes" placeholder="08xxxxxxxxxx" style="flex:1"><button onclick="tes()">Kirim tes</button></div></div>
+<div id="p_bk" class="hide card"><p class="m">Backup menyalin seluruh spreadsheet (laporan, pengguna, pengelola, log) ke folder Google Drive pemilik script. Token Fonnte tidak ikut tersalin.</p>
+<div class="row" style="margin-bottom:10px"><button class="pri" id="bkb" onclick="bkNow()">💾 Backup sekarang</button><a id="bkf" href="#" target="_blank" rel="noopener">Buka folder Drive</a></div>
+<div class="g"><div><label>Backup otomatis (pukul 02.00 WITA)</label><select id="bka"><option value="off">Nonaktif</option><option value="harian">Harian</option><option value="mingguan">Mingguan (Senin)</option></select></div>
+<div><label>Simpan backup otomatis terbaru sebanyak</label><input id="bkk" type="number" min="3" max="60"></div></div>
+<p><button onclick="bkCfg()">Simpan pengaturan</button></p><div id="bkl" class="m">Memuat…</div></div>
 <div id="p_log" class="hide card"><table><thead><tr><th>Waktu</th><th>Laporan</th><th>Tujuan</th><th>Hasil</th></tr></thead><tbody id="lgb"></tbody></table></div>
 </div>
 
-<dialog id="dr"><b>Laporan/Kegiatan</b><input type="hidden" id="fid">
+<dialog id="dr"><b>Laporan/Kegiatan</b><input type="hidden" id="fid"><input type="hidden" id="frev">
 <label>Judul</label><input id="fj"><div id="wu"><label>Pemilik</label><select id="fu"></select></div>
 <div class="g"><div><label>Pimpinan</label><input id="fpm"></div><div><label>WA Pimpinan</label><input id="fwp" placeholder="08xxxxxxxxxx"></div>
 <div><label>Deadline</label><input id="fd" type="date"></div><div><label>Periode (opsional)</label><select id="fpr"></select></div>
@@ -65,46 +71,55 @@ dialog{border:1px solid var(--b);border-radius:12px;background:var(--c);color:va
 <p style="text-align:right"><button onclick="dp.close()">Batal</button> <button class="pri" onclick="simpanProfil()">Simpan</button></p></dialog>
 
 <dialog id="du"><b>Pengguna</b><div class="g"><div><label>Username</label><input id="uu" autocapitalize="none"></div><div><label>Nama</label><input id="un"></div>
-<div><label>Peran</label><select id="up"><option value="pengguna">Pengguna</option><option value="admin">Admin</option></select></div><div><label>Status</label><select id="ua"><option value="Y">Aktif</option><option value="N">Nonaktif</option></select></div>
+<div><label>Peran</label><select id="up"><option value="pengguna">Pengguna</option><option value="admin">Admin</option><option value="monitoring">Monitoring (hanya lihat)</option></select></div><div><label>Status</label><select id="ua"><option value="Y">Aktif</option><option value="N">Nonaktif</option></select></div>
 <div><label>Nomor WA</label><input id="uw"></div><div><label>Password (isi untuk baru/reset)</label><input id="upw" type="password"></div></div>
 <p style="text-align:right"><button onclick="du.close()">Batal</button> <button class="pri" onclick="simpanU()">Simpan</button></p></dialog>
 
+<div id="prn"></div>
 <script>
 const GAS=typeof google!=='undefined'&&google.script&&google.script.run,$=i=>document.getElementById(i),M={};
 const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const st={get(k){try{return localStorage.getItem(k)||''}catch(e){return M[k]||''}},set(k,v){try{v?localStorage.setItem(k,v):localStorage.removeItem(k)}catch(e){M[k]=v}}};
-let TOKEN=st.get('tk'),D=null,ADM=false;
+let TOKEN=st.get('tk'),D=null,ADM=false,MON=false,LM=null,BUSY=0,monOn=0,dirty={};const POLL=30000;
 const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const sisa=d=>Math.round((Date.parse(d)-Date.parse(today()))/864e5);
 const iso=(y,m,d)=>new Date(Date.UTC(y,m,d)).toISOString().slice(0,10);
 const ok=l=>/^https?:\/\//i.test(l||'');
-async function T(f){try{return await f()}catch(e){alert(e.message)}}
+async function T(f){try{return await f()}catch(e){if(/diubah pengguna lain|tidak ditemukan|sudah diselesaikan/.test(e.message))['dr','ds'].forEach(i=>$(i).close());alert(e.message);if(D&&TOKEN&&!e.net&&!/sesi/i.test(e.message))sync(1)}}
 async function api(fn,...a){
  const args=fn==='login'?a:[TOKEN,...a];let r;
  if(GAS)r=await new Promise((o,n)=>google.script.run.withSuccessHandler(o).withFailureHandler(e=>n(new Error(e.message||e))).rpc(fn,args));
  else{const u=st.get('api');if(!u)throw new Error('URL Web App belum diisi');
-  const x=await fetch(u,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args})});r=await x.json()}
- if(!r.ok){if(/sesi/i.test(r.e))keluar();throw new Error(r.e)}return r.d}
+  let x;try{x=await fetch(u,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({fn,args})})}catch(e){const n=new Error('Tidak ada koneksi / server tidak terjangkau. Perubahan belum tersimpan.');n.net=1;throw n}
+  try{r=await x.json()}catch(e){throw new Error('Respons server tidak valid. Pastikan URL benar dan Web App di-deploy dengan akses "Anyone".')}}
+ if(!r.ok){if(/sesi/i.test(r.e))keluar('Sesi berakhir, silakan login ulang.');throw new Error(r.e)}return r.d}
 function masuk(){T(async()=>{if(!GAS){const u=$('apiurl').value.trim();if(u)st.set('api',u)}
  const r=await api('login',$('lu').value,$('lp').value);TOKEN=r.token;st.set('tk',TOKEN);$('lp').value='';await muat()})}
-function keluar(){TOKEN='';st.set('tk','');D=null;show()}
-async function muat(){D=await api('data');show()}
+function keluar(m){TOKEN='';st.set('tk','');D=null;monOn=0;LM=null;dirty={};$('tabs').dataset.r='';$('lmsg').textContent=m||'Masuk untuk melanjutkan';show()}
+function stamp(){$('sy').textContent='✔ Tersinkron '+new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}
+async function muat(){D=await api('data');show();stamp();if(monOn)mon(1)}
+/* Sinkronisasi: cek penanda perubahan (ringan) tiap POLL ms, saat aplikasi dibuka kembali, dan saat online. Muat ulang hanya jika ada perubahan. */
+async function sync(f){if(!TOKEN||!D||BUSY||(!f&&document.hidden))return;BUSY=1;
+ try{if(f||await api('rev')!==D.rev){D=await api('data');show();if(monOn)mon(1)}stamp()}
+ catch(e){if(!/sesi/i.test(e.message))$('sy').textContent=e.net?'⚠ Offline — belum tersinkron':'⚠ '+e.message}
+ finally{BUSY=0}}
 function opt(a,first){return (first!=null?`<option value="">${first}</option>`:'')+a.map(x=>`<option value="${esc(x[0])}">${esc(x[1])}</option>`).join('')}
-function tab(k){['lap','mon','usr','pg','cfg','log'].forEach(x=>{$('p_'+x).classList.toggle('hide',x!=k);const b=$('t_'+x);if(b)b.classList.toggle('on',x==k)})}
+function tab(k){if(k=='bk')loadBk();['lap','mon','usr','pg','cfg','log','bk'].forEach(x=>{$('p_'+x).classList.toggle('hide',x!=k);const b=$('t_'+x);if(b)b.classList.toggle('on',x==k)})}
+function setOpts(id,h){const e=$(id),v=e.value;e.innerHTML=h;if([...e.options].some(o=>o.value==v))e.value=v}
 function show(){
- $('lgn').classList.toggle('hide',!!D);$('ap').classList.toggle('hide',!D);$('apiw').classList.toggle('hide',!!GAS);$('apiurl').value=st.get('api');
- if(!D)return;ADM=D.me.peran=='admin';
+ $('lgn').classList.toggle('hide',!!D);$('ap').classList.toggle('hide',!D);$('apiw').classList.toggle('hide',!!GAS);
+ if(!D){$('apiurl').value=st.get('api');return}
+ ADM=D.me.peran=='admin';MON=D.me.peran=='monitoring';
  $('me').textContent=D.me.nama+' ('+D.me.peran+')';$('warn').classList.toggle('hide',!D.me.wajibGanti);$('bk').classList.toggle('hide',!ADM);
- const T0=[['lap','Laporan'],['mon','Monitoring']].concat(ADM?[['usr','Pengguna'],['pg','Pengelola'],['cfg','Pengaturan'],['log','Log']]:[]);
- $('tabs').innerHTML=T0.map(x=>`<button id="t_${x[0]}" onclick="tab('${x[0]}')">${x[1]}</button>`).join('');
- const cur=T0.find(x=>!$('p_'+x[0]).classList.contains('hide'));tab(cur?cur[0]:'lap');
- $('mper').innerHTML=opt(D.periode.map(x=>[x,x]),'Semua');$('fpr').innerHTML=opt(D.periode.map(x=>[x,x]),'— tidak dipilih —');
- $('mkat').innerHTML=opt(['Berjalan','Terlambat','Selesai tepat waktu','Selesai terlambat'].map(x=>[x,x]),'Semua');
- $('mw').classList.toggle('hide',!ADM);$('wu').classList.toggle('hide',!ADM);
- const ua=D.users.filter(x=>x.Aktif=='Y').map(x=>[x.Username,x.Nama]);$('muser').innerHTML=opt(ua,'Semua');$('fu').innerHTML=opt(ua);
- if(!$('mdari').value)rng(1,1);
- rLap();rUsr();$('pg').value=D.pengelola.map(p=>p.Nama+', '+p.WA).join('\n');
- if(D.cfg){$('days').value=D.cfg.days;$('hour').value=D.cfg.hour;$('tk').textContent=D.cfg.tokenSet?'(tersimpan ✔)':'(belum diatur)'}
+ if($('tabs').dataset.r!=D.me.peran){const T0=(MON?[]:[['lap','Laporan']]).concat([['mon','Monitoring']]).concat(ADM?[['usr','Pengguna'],['pg','Pengelola'],['cfg','Pengaturan'],['bk','Backup'],['log','Log']]:[]);
+  $('tabs').innerHTML=T0.map(x=>`<button id="t_${x[0]}" onclick="tab('${x[0]}')">${x[1]}</button>`).join('');$('tabs').dataset.r=D.me.peran;tab(MON?'mon':'lap')}
+ setOpts('mper',opt(D.periode.map(x=>[x,x]),'Semua'));setOpts('fpr',opt(D.periode.map(x=>[x,x]),'— tidak dipilih —'));
+ setOpts('mkat',opt(['Berjalan','Terlambat','Selesai tepat waktu','Selesai terlambat'].map(x=>[x,x]),'Semua'));
+ $('mw').classList.toggle('hide',D.me.peran=='pengguna');$('wu').classList.toggle('hide',!ADM);
+ const ua=D.owners.filter(x=>x.Peran!='monitoring').map(x=>[x.Username,x.Nama]);setOpts('muser',opt(ua,'Semua'));setOpts('fu',opt(ua));
+ if(!$('mdari').value)rng(1,1);if(MON&&!monOn)mon(1);
+ rLap();rUsr();if(!dirty.pg)$('pg').value=D.pengelola.map(p=>p.Nama+', '+p.WA).join('\n');
+ if(D.cfg){if(!dirty.cfg){$('days').value=D.cfg.days;$('hour').value=D.cfg.hour}$('tk').textContent=D.cfg.tokenSet?'(tersimpan ✔)':'(belum diatur)'}
  $('lgb').innerHTML=D.log.map(l=>`<tr><td>${esc(l.Waktu)}</td><td>${esc(l.Laporan)}</td><td>${esc(l.Tujuan)}</td><td>${esc(l.Hasil)}</td></tr>`).join('')}
 function rLap(){
  const L=[...D.laporan].sort((a,b)=>(a.Status=='Selesai')-(b.Status=='Selesai')||a.Deadline.localeCompare(b.Deadline));
@@ -116,9 +131,9 @@ function rLap(){
  ${r.Catatan?`<div class="m">📝 ${esc(r.Catatan)}</div>`:''}</div>
  <div class="bt"><button class="sm" onclick="edit('${r.ID}')">Ubah</button>${sel?(ADM?`<button class="sm" onclick="buka('${r.ID}')">Buka kembali</button>`:''):`<button class="sm pri" onclick="selesai('${r.ID}')">✔ Selesaikan</button>`}${ADM||!sel?`<button class="sm" onclick="hapus('${r.ID}')">Hapus</button>`:''}</div></div>`}).join('')||'<p class="m">Belum ada laporan.</p>'}
 function edit(id){const r=D.laporan.find(x=>x.ID==id)||{};
- $('fid').value=r.ID||'';$('fj').value=r.Judul||'';$('fpm').value=r.Pimpinan||'';$('fwp').value=r['WA Pimpinan']||'';$('fd').value=r.Deadline||'';
+ $('fid').value=r.ID||'';$('frev').value=r.Rev||'';$('fj').value=r.Judul||'';$('fpm').value=r.Pimpinan||'';$('fwp').value=r['WA Pimpinan']||'';$('fd').value=r.Deadline||'';
  $('fpr').value=r.Periode||'';$('fs').value=r.Status=='Proses'?'Proses':'Belum';$('fc').value=r.Catatan||'';$('fu').value=r.User||D.me.username;$('dr').showModal()}
-function simpan(){T(async()=>{await api('saveReport',{ID:$('fid').value,Judul:$('fj').value.trim(),Pimpinan:$('fpm').value.trim(),'WA Pimpinan':$('fwp').value.trim(),
+function simpan(){T(async()=>{await api('saveReport',{ID:$('fid').value,Rev:$('frev').value,Judul:$('fj').value.trim(),Pimpinan:$('fpm').value.trim(),'WA Pimpinan':$('fwp').value.trim(),
  Deadline:$('fd').value,Periode:$('fpr').value,Status:$('fs').value,Catatan:$('fc').value.trim(),User:$('fu').value});$('dr').close();await muat()})}
 function selesai(id){$('sid').value=id;$('slink').value='';$('ds').showModal()}
 function kirimSelesai(){T(async()=>{await api('selesai',$('sid').value,$('slink').value);$('ds').close();await muat()})}
@@ -127,20 +142,46 @@ function buka(id){if(confirm('Buka kembali laporan ini?'))T(async()=>{await api(
 function kirimNow(){if(confirm('Kirim pengingat untuk laporan yang jatuh tempo/terlambat sekarang?'))T(async()=>{const n=await api('kirim');alert(n+' laporan diproses. Lihat tab Log.');await muat()})}
 function rng(len,quiet){const d=new Date(),y=d.getFullYear(),m=d.getMonth(),s=len==1?m:len==3?Math.floor(m/3)*3:len==6?(m<6?0:6):0;
  $('mdari').value=iso(y,s,1);$('msampai').value=iso(y,s+len,0);if(!quiet)mon()}
-function mon(){T(async()=>{const r=await api('monitoring',{dari:$('mdari').value,sampai:$('msampai').value,periode:$('mper').value,kat:$('mkat').value,user:$('muser').value}),k=r.ringkas;
+function mon(q){monOn=1;const f=async()=>{const r=await api('monitoring',{dari:$('mdari').value,sampai:$('msampai').value,periode:$('mper').value,kat:$('mkat').value,user:$('muser').value}),k=r.ringkas;LM={r,f:{dari:$('mdari').value,sampai:$('msampai').value,per:$('mper').value,kat:$('mkat').value,user:$('muser').value?$('muser').selectedOptions[0].text:''}};
  $('msum').innerHTML=[['Total',k.total],['Berjalan',k.berjalan],['Terlambat',k.terlambat],['Selesai tepat waktu',k.tepat],['Selesai terlambat',k.telat],['% tepat waktu',k.pct+'%']].map(x=>`<div class="tile"><b>${x[1]}</b><span class="m">${x[0]}</span></div>`).join('');
  $('mubox').classList.toggle('hide',!r.perUser.length);
  $('mu').innerHTML='<table><tr><th>Pemilik</th><th>Total</th><th>Selesai</th><th>Terlambat</th></tr>'+r.perUser.map(p=>`<tr><td>${esc(p.nama)}</td><td>${p.total}</td><td>${p.selesai}</td><td>${p.terlambat}</td></tr>`).join('')+'</table>';
  $('ml').innerHTML=r.daftar.length?'<table><tr><th>Laporan</th><th>Pemilik</th><th>Periode</th><th>Deadline</th><th>Selesai</th><th>Kategori</th><th>Dokumen</th></tr>'+r.daftar.map(x=>
- `<tr><td>${esc(x.Judul)}</td><td>${esc(x.Pemilik)}</td><td>${esc(x.Periode||'-')}</td><td>${esc(x.Deadline)}</td><td>${esc(x['Tgl Selesai']||'-')}</td><td>${esc(x.Kategori)}</td><td>${ok(x['Link Dokumen'])?`<a href="${esc(x['Link Dokumen'])}" target="_blank" rel="noopener">Buka</a>`:'-'}</td></tr>`).join('')+'</table>':'Tidak ada data pada filter ini.'})}
+ `<tr><td>${esc(x.Judul)}</td><td>${esc(x.Pemilik)}</td><td>${esc(x.Periode||'-')}</td><td>${esc(x.Deadline)}</td><td>${esc(x['Tgl Selesai']||'-')}</td><td>${esc(x.Kategori)}</td><td>${ok(x['Link Dokumen'])?`<a href="${esc(x['Link Dokumen'])}" target="_blank" rel="noopener">Buka</a>`:'-'}</td></tr>`).join('')+'</table>':'Tidak ada data pada filter ini.'};return q?f().catch(()=>{}):T(f)}
+const PCSS='@page{size:A4 landscape;margin:12mm}#prn,#prn *{color:#000!important;font-family:Arial,sans-serif}#prn{font-size:11px}#prn h2{margin:0 0 4px;font-size:16px}#prn .s{display:flex;gap:6px;margin:8px 0}#prn .s div{border:1px solid #999;padding:4px 8px;text-align:center;flex:1}#prn .s b{display:block;font-size:15px}#prn table{width:100%;border-collapse:collapse;margin:4px 0 10px}#prn th,#prn td{border:1px solid #888;padding:3px 5px;text-align:left;vertical-align:top}#prn th{background:#e5e5e5!important}';
+/* Cetak laporan monitoring sesuai filter yang sedang tampil. Web: dialog cetak browser (bisa "Simpan sebagai PDF"). APK: lewat plugin printer bila tersedia. */
+function cetak(){
+ if(!LM)return alert('Klik "Tampilkan" terlebih dahulu agar data yang dicetak sesuai filter.');
+ const r=LM.r,k=r.ringkas,f=LM.f,now=new Date().toLocaleString('id-ID');
+ const inner=`<h2>Laporan Monitoring Penyelesaian Laporan/Kegiatan</h2>
+ <div>Deadline: <b>${esc(f.dari||'-')}</b> s.d. <b>${esc(f.sampai||'-')}</b> · Periode laporan: ${esc(f.per||'Semua')} · Kategori: ${esc(f.kat||'Semua')}${f.user?' · Pemilik: '+esc(f.user):''}</div>
+ <div>Dicetak oleh ${esc(D.me.nama)} pada ${esc(now)}</div>
+ <div class="s">${[['Total',k.total],['Berjalan',k.berjalan],['Terlambat',k.terlambat],['Selesai tepat waktu',k.tepat],['Selesai terlambat',k.telat],['% tepat waktu',k.pct+'%']].map(x=>`<div><b>${x[1]}</b>${x[0]}</div>`).join('')}</div>
+ ${r.perUser.length?`<b>Rekap per pemilik</b><table><thead><tr><th>Pemilik</th><th>Total</th><th>Selesai</th><th>Terlambat</th></tr></thead><tbody>${r.perUser.map(p=>`<tr><td>${esc(p.nama)}</td><td>${p.total}</td><td>${p.selesai}</td><td>${p.terlambat}</td></tr>`).join('')}</tbody></table>`:''}
+ <b>Daftar laporan</b><table><thead><tr><th>No</th><th>Laporan</th><th>Pemilik</th><th>Pimpinan</th><th>Periode</th><th>Deadline</th><th>Tgl Selesai</th><th>Kategori</th><th>Dokumen dukung</th></tr></thead><tbody>${r.daftar.map((x,i)=>
+ `<tr><td>${i+1}</td><td>${esc(x.Judul)}</td><td>${esc(x.Pemilik)}</td><td>${esc(x.Pimpinan||'-')}</td><td>${esc(x.Periode||'-')}</td><td>${esc(x.Deadline)}</td><td>${esc(x['Tgl Selesai']||'-')}</td><td>${esc(x.Kategori)}</td><td>${ok(x['Link Dokumen'])?`<a href="${esc(x['Link Dokumen'])}">Lampiran</a>`:'-'}</td></tr>`).join('')||'<tr><td colspan="9">Tidak ada data pada filter ini.</td></tr>'}</tbody></table>
+ <div style="font-size:10px">Terlambat = belum selesai dan deadline terlampaui. Selesai terlambat = diselesaikan setelah deadline.</div>`;
+ const P=window.cordova&&cordova.plugins&&cordova.plugins.printer,NAT=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform();
+ if(P)P.print('<html><head><meta charset="utf-8"><style>'+PCSS+'</style></head><body><div id="prn">'+inner+'</div></body></html>',{name:'Laporan Monitoring'});
+ else if(NAT)alert('Cetak belum tersedia di aplikasi ini. Buka web app lewat Chrome (HP/komputer) untuk mencetak atau menyimpan PDF.');
+ else{$('prn').innerHTML='<style>'+PCSS+'</style>'+inner;setTimeout(()=>window.print(),50)}}
 function profil(){$('pn').value=D.me.nama;$('pw').value=D.me.wa;$('pl').value=$('pb').value='';$('dp').showModal()}
 function simpanProfil(){T(async()=>{await api('profil',{Nama:$('pn').value.trim(),WA:$('pw').value.trim(),Lama:$('pl').value,Baru:$('pb').value});$('dp').close();await muat()})}
 function rUsr(){$('ul').innerHTML='<table><tr><th>Username</th><th>Nama</th><th>Peran</th><th>WA</th><th>Status</th><th></th></tr>'+D.users.map(x=>
  `<tr><td>${esc(x.Username)}</td><td>${esc(x.Nama)}</td><td>${esc(x.Peran)}</td><td>${esc(x.WA)}</td><td>${x.Aktif=='Y'?'Aktif':'Nonaktif'}</td><td><button class="sm" onclick="editU('${esc(x.Username)}')">Ubah</button></td></tr>`).join('')+'</table>'}
 function editU(un){const x=D.users.find(v=>v.Username==un)||{};$('uu').value=x.Username||'';$('uu').readOnly=!!x.Username;$('un').value=x.Nama||'';$('up').value=x.Peran||'pengguna';$('ua').value=x.Aktif||'Y';$('uw').value=x.WA||'';$('upw').value='';$('du').showModal()}
 function simpanU(){T(async()=>{await api('saveUser',{Username:$('uu').value,Nama:$('un').value.trim(),Peran:$('up').value,Aktif:$('ua').value,WA:$('uw').value.trim(),Password:$('upw').value});$('du').close();await muat()})}
-function simpanPg(){T(async()=>{await api('savePengelola',$('pg').value.split('\n').map(x=>x.split(',')).filter(x=>x[1]).map(x=>({Nama:x[0].trim(),WA:x[1].trim()})));alert('Tersimpan');await muat()})}
-function simpanCfg(){T(async()=>{await api('saveCfg',{token:$('token').value,days:$('days').value,hour:$('hour').value});$('token').value='';alert('Pengaturan & jadwal harian tersimpan');await muat()})}
+function simpanPg(){T(async()=>{await api('savePengelola',$('pg').value.split('\n').map(x=>x.split(',')).filter(x=>x[1]).map(x=>({Nama:x[0].trim(),WA:x[1].trim()})));dirty.pg=0;alert('Tersimpan');await muat()})}
+function simpanCfg(){T(async()=>{await api('saveCfg',{token:$('token').value,days:$('days').value,hour:$('hour').value});$('token').value='';dirty.cfg=0;alert('Pengaturan & jadwal harian tersimpan');await muat()})}
 function tes(){T(async()=>alert('Hasil: '+await api('sendTest',$('tes').value)))}
+let BK=[];
+function loadBk(){return T(async()=>{const r=await api('backupList');BK=r.items;$('bka').value=r.auto;$('bkk').value=r.keep;$('bkf').href=r.folder;
+ $('bkl').innerHTML=BK.length?'<table><tr><th>Backup</th><th>Dibuat</th><th></th></tr>'+BK.map((x,i)=>`<tr><td>${esc(x.nama)}</td><td>${esc(x.tgl)}</td><td><a href="${esc(x.url)}" target="_blank" rel="noopener">Buka</a> <button class="sm" onclick="pulih(${i})">Pulihkan</button></td></tr>`).join('')+'</table>':'Belum ada backup.'})}
+function bkNow(){T(async()=>{const b=$('bkb');b.disabled=1;b.textContent='Membuat backup…';try{await api('backupNow')}finally{b.disabled=0;b.textContent='💾 Backup sekarang'}await loadBk();alert('Backup berhasil dibuat.')})}
+function bkCfg(){T(async()=>{await api('backupCfg',{auto:$('bka').value,keep:$('bkk').value});alert('Pengaturan backup tersimpan');await loadBk()})}
+function pulih(i){const x=BK[i];if(x&&confirm('Pulihkan data dari:\n'+x.nama+'\n\nData laporan, pengelola, dan pengguna saat ini akan DIGANTI. Backup "sebelum pemulihan" dibuat otomatis lebih dulu. Lanjutkan?'))T(async()=>{const h=await api('restore',x.id);alert('Pemulihan selesai. '+h);await muat();await loadBk()})}
+$('pg').oninput=()=>dirty.pg=1;['days','hour','token'].forEach(i=>$(i).oninput=()=>dirty.cfg=1);
 show();if(TOKEN)T(muat);
+setInterval(()=>sync(),POLL);document.addEventListener('visibilitychange',()=>{if(!document.hidden)sync()});
+addEventListener('focus',()=>sync());addEventListener('online',()=>sync(1));addEventListener('offline',()=>{$('sy').textContent='⚠ Offline'});
 </script></body></html>

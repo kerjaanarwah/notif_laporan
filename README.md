@@ -18,3 +18,8 @@ cd android && ./gradlew assembleDebug
 APK: android/app/build/outputs/apk/debug/app-debug.apk
 
 Ubah tampilan/fitur: edit www/index.html (salinan Index.html), lalu build ulang.
+
+## Cetak laporan monitoring di APK
+Workflow mencoba memasang plugin cetak (cordova-plugin-printer). Jika build gagal, otomatis dibangun ulang
+tanpa plugin; tombol Cetak di APK lalu menampilkan petunjuk untuk mencetak lewat web (Chrome).
+Cara B (lokal): jalankan juga `npm install cordova-plugin-printer` sebelum `npx cap sync android`.
